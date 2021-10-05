@@ -2,17 +2,17 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>rdomain on insec.sh</title>
-    <link>https://example.com/blog/rdomain/</link>
+    <link>https://insec.sh/blog/rdomain/</link>
     <description>Recent content in rdomain on insec.sh</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-US</language>
-    <lastBuildDate>Fri, 01 Oct 2021 13:45:50 -0700</lastBuildDate><atom:link href="https://example.com/blog/rdomain/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Fri, 01 Oct 2021 13:45:50 -0700</lastBuildDate><atom:link href="https://insec.sh/blog/rdomain/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Secure torrenting with OpenBSD rdomains</title>
-      <link>https://example.com/secure-torrenting-with-openbsd-rdomains/</link>
+      <link>https://insec.sh/secure-torrenting-with-openbsd-rdomains/</link>
       <pubDate>Fri, 01 Oct 2021 13:45:50 -0700</pubDate>
       
-      <guid>https://example.com/secure-torrenting-with-openbsd-rdomains/</guid>
+      <guid>https://insec.sh/secure-torrenting-with-openbsd-rdomains/</guid>
       <description>Introduction I&amp;rsquo;ve been spending my recent time off tinkering with my neglected home network. OpenBSD has been a core feature of my home network ever since I was a student, I usually have some sort of OpenBSD server as well as an OpenBSD router. I like it&amp;rsquo;s simplicity and its stability, but most of all I appreciate OpenBSD as a learning tool. The kernel code is much easier to navigate and read than the Linux kernel, so if you&amp;rsquo;re interested in learning more about operating systems it&amp;rsquo;s a great place to start.</description>
     </item>
     

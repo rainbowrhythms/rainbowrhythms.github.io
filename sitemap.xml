@@ -2,22 +2,22 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>https://example.com/</loc>
+    <loc>https://insec.sh/</loc>
     <lastmod>2021-10-01T13:45:50-07:00</lastmod>
   </url><url>
-    <loc>https://example.com/</loc>
+    <loc>https://insec.sh/</loc>
     <lastmod>2021-10-01T13:45:50-07:00</lastmod>
   </url><url>
-    <loc>https://example.com/blog/openbsd/</loc>
+    <loc>https://insec.sh/blog/openbsd/</loc>
     <lastmod>2021-10-01T13:45:50-07:00</lastmod>
   </url><url>
-    <loc>https://example.com/blog/rdomain/</loc>
+    <loc>https://insec.sh/blog/rdomain/</loc>
     <lastmod>2021-10-01T13:45:50-07:00</lastmod>
   </url><url>
-    <loc>https://example.com/secure-torrenting-with-openbsd-rdomains/</loc>
+    <loc>https://insec.sh/secure-torrenting-with-openbsd-rdomains/</loc>
     <lastmod>2021-10-01T13:45:50-07:00</lastmod>
   </url><url>
-    <loc>https://example.com/about/</loc>
+    <loc>https://insec.sh/about/</loc>
     <lastmod>2021-09-30T20:22:24-07:00</lastmod>
   </url>
 </urlset>
