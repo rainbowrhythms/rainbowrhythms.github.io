@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+  <meta http-equiv="X-Clacks-Overhead" content="GNU Terry Pratchett" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Secure torrenting with OpenBSD rdomains | insec.sh</title>
+<meta name="title" content="Secure torrenting with OpenBSD rdomains" />
+<meta name="description" content="Configuring rdomains on OpenBSD" />
+<meta name="keywords" content="openbsd,rdomain," />
+
+
+<meta property="og:title" content="Secure torrenting with OpenBSD rdomains" />
+<meta property="og:description" content="Configuring rdomains on OpenBSD" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://example.com/secure-torrenting-with-openbsd-rdomains/" /><meta property="og:image" content="https://example.com/images/share.png"/><meta property="article:section" content="blog" />
+<meta property="article:published_time" content="2021-10-01T13:45:50-07:00" />
+<meta property="article:modified_time" content="2021-10-01T13:45:50-07:00" /><meta property="og:site_name" content="insec.sh" />
+
+
+
+
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:image" content="https://example.com/images/share.png"/>
+
+<meta name="twitter:title" content="Secure torrenting with OpenBSD rdomains"/>
+<meta name="twitter:description" content="Configuring rdomains on OpenBSD"/>
+
+
+
+<meta itemprop="name" content="Secure torrenting with OpenBSD rdomains">
+<meta itemprop="description" content="Configuring rdomains on OpenBSD"><meta itemprop="datePublished" content="2021-10-01T13:45:50-07:00" />
+<meta itemprop="dateModified" content="2021-10-01T13:45:50-07:00" />
+<meta itemprop="wordCount" content="1529"><meta itemprop="image" content="https://example.com/images/share.png"/>
+<meta itemprop="keywords" content="openbsd,rdomain," />
+<meta name="referrer" content="no-referrer-when-downgrade" />
+
+  <style>
+  body {
+    font-family: Verdana, sans-serif;
+    margin: auto;
+    padding: 20px;
+    max-width: 720px;
+    text-align: left;
+    background-color: #fff;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    line-height: 1.5;
+    color: #444;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  strong,
+  b {
+    color: #222;
+  }
+
+  a {
+    color: #3273dc;
+     
+  }
+
+  .title {
+    text-decoration: none;
+    border: 0;
+  }
+
+  .title span {
+    font-weight: 400;
+  }
+
+  nav a {
+    margin-right: 10px;
+  }
+
+  textarea {
+    width: 100%;
+    font-size: 16px;
+  }
+
+  input {
+    font-size: 16px;
+  }
+
+  content {
+    line-height: 1.6;
+  }
+
+  table {
+    width: 100%;
+  }
+
+  img {
+    max-width: 100%;
+  }
+
+  code {
+    padding: 2px 5px;
+    background-color: #f2f2f2;
+  }
+
+  pre code {
+    color: #222;
+    display: block;
+    padding: 20px;
+    white-space: pre-wrap;
+    font-size: 14px;
+  }
+
+  div.highlight pre {
+    background-color: initial;
+    color: initial;
+  }
+
+  div.highlight code {
+    background-color: unset;
+    color: unset;
+  }
+
+  blockquote {
+    border-left: 1px solid #999;
+    color: #222;
+    padding-left: 20px;
+    font-style: italic;
+  }
+
+  footer {
+    padding: 25px;
+    text-align: center;
+  }
+
+  .helptext {
+    color: #777;
+    font-size: small;
+  }
+
+  .errorlist {
+    color: #eba613;
+    font-size: small;
+  }
+
+   
+  ul.blog-posts {
+    list-style-type: none;
+    padding: unset;
+  }
+
+  ul.blog-posts li {
+    display: flex;
+  }
+
+  ul.blog-posts li span {
+    flex: 0 0 130px;
+  }
+
+  ul.blog-posts li a:visited {
+    color: #8b6fcb;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    body {
+      background-color: #333;
+      color: #ddd;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6,
+    strong,
+    b {
+      color: #eee;
+    }
+
+    a {
+      color: #8cc2dd;
+    }
+
+    code {
+      background-color: #777;
+    }
+
+    pre code {
+      color: #ddd;
+    }
+
+    blockquote {
+      color: #ccc;
+    }
+
+    textarea,
+    input {
+      background-color: #252525;
+      color: #ddd;
+    }
+
+    .helptext {
+      color: #aaa;
+    }
+  }
+
+</style>
+
+</head>
+
+<body>
+  <header><a href="/" class="title">
+  <h2>insec.sh</h2>
+</a>
+<nav><a href="/">Blog</a>
+</nav>
+</header>
+  <main>
+
+<h1>Secure torrenting with OpenBSD rdomains</h1>
+<p>
+  <i>
+    <time datetime='2021-10-01' pubdate>
+      01 Oct, 2021
+    </time>
+  </i>
+</p>
+
+<content>
+  <h2 id="introduction">Introduction</h2>
+<p>I&rsquo;ve been spending my recent time off tinkering with my neglected home network. OpenBSD has been a core feature of my home network ever since I was a student, I usually have some sort of OpenBSD server as well as an OpenBSD router. I like it&rsquo;s simplicity and its stability, but most of all I appreciate OpenBSD as a learning tool. The kernel code is much easier to navigate and read than the Linux kernel, so if you&rsquo;re interested in learning more about operating systems it&rsquo;s a great place to start.</p>
+<p>My most recent home network project was to set up a secure torrenting and media playback system on my OpenBSD server. This seemed like a good excuse to learn more about some of OpenBSD&rsquo;s networking features: I want my torrent client to only be able to communicate over a VPN network, with all other processes on the same machine using the default network.</p>
+<p>To do this I need to be able to set up two separate routing tables - one for the torrent client (transmission) to route over the VPN interface, and one for everything else. Routing tables are a set of rules used to determine which path to send a packet to its destination. Any networked machine will have a routing table and contains the topology of the immediate network surrounding it.</p>
+<p>On a typical machine, all interfaces are connected to a single routing table. OpenBSD&rsquo;s routing domains (rdomain(4)) allow you to have multiple routing tables on a single machine. Setting up multiple rdomains allows you to segment the network on a machine between different network paths.</p>
+<p>So if I configure transmission into a separate rdomain with the VPN interface, I can completely segment transmission from the rest of my network.</p>
+<h2 id="configuring-openvpn">Configuring OpenVPN</h2>
+<p>We need to configure the tun0 interface created by OpenVPN into a separate rdomain from the default (rdomain0).</p>
+<p>First launch OpenVPN, this will create the tun0 interface. I use a configuration file provided by ProtonVPN.</p>
+<pre tabindex="0"><code># /usr/local/sbin/openvpn --cd /etc/openvpn --config /etc/openvpn/proton.ovpn
+</code></pre><p>Note that we&rsquo;re launching OpenVPN in the default rdomain0 for now. We need our VPN client to be able to connect to the internet: if we launched it in a new rdomain it wouldn&rsquo;t be able to route to the ProtonVPN servers and set up our tunnel interface.</p>
+<p>Once the client has established a connection, we can move it into a separate rdomain, in this case rdomain 1:</p>
+<pre tabindex="0"><code># ifconfig tun0 rdomain 1
+</code></pre><p>As part of establishing our VPN tunnel, OpenVPN will add routes provided to it by the server. You can see this in the log output for OpenVPN (snipped for brevity):</p>
+<pre tabindex="0"><code>2021-09-25 15:32:24 /sbin/ifconfig tun0 10.20.0.6 10.20.0.1 mtu 1500 netmask 255.255.0.0 up
+2021-09-25 15:32:24 /sbin/route add -net 10.20.0.0 -netmask 255.255.0.0 10.20.0.1
+add net 10.20.0.0: gateway 10.20.0.1
+2021-09-25 15:32:24 /sbin/route add -net 185.159.158.100 -netmask 255.255.255.255 10.0.0.1
+add net 185.159.158.100: gateway 10.0.0.1
+2021-09-25 15:32:24 /sbin/route add -net 0.0.0.0 -netmask 128.0.0.0 10.20.0.1
+add net 0.0.0.0: gateway 10.20.0.1
+2021-09-25 15:32:24 /sbin/route add -net 128.0.0.0 -netmask 128.0.0.0 10.20.0.1
+add net 128.0.0.0: gateway 10.20.0.1
+</code></pre><p>We need to add these routes again to rtable1:</p>
+<pre tabindex="0"><code># route -T1 add -net 10.20.0.0 -netmask 255.255.0.0 10.20.0.1
+# route -T1 add -net 0.0.0.0 -netmask 128.0.0.0 10.20.0.1
+# route -T1 add -net 128.0.0.0 -netmask 128.0.0.0 10.20.0.1
+</code></pre><p>To verify, we can check the routes in rtable 1 match what we just added:</p>
+<pre tabindex="0"><code># route -T1 show
+Routing tables
+
+Internet:
+Destination        Gateway            Flags   Refs      Use   Mtu  Prio Iface
+0/1                10.20.0.1          UGS        0        0     -     8 tun0
+128/1              10.20.0.1          UGS        0        0     -     8 tun0
+10.20/16           10.20.0.1          UGS        0        0     -     8 tun0
+10.20.0.1          10.20.0.6          UHh        3        3     -     8 tun0
+10.20.0.6          10.20.0.6          UHl        0        0     -     1 tun0
+</code></pre><p>And we can verify that rtable1 use the routes through the VPN interface by default and that it can succesfully access the internet:</p>
+<pre tabindex="0"><code>$ route -T1 exec curl icanhazip.com
+185.159.158.101
+</code></pre><h2 id="configuring-transmission">Configuring Transmission</h2>
+<p>Now that we&rsquo;ve confirmed that the VPN tun0 interface is the default route for rdomain 1, we can place the transmission daemon within this rdomain.</p>
+<p>Doing so is simple on OpenBSD, you can use <code>rcctl</code> to set the transmission_daemon default rtable, like so:</p>
+<pre tabindex="0"><code># rcctl set transmission_daemon rtable 1
+</code></pre><p>And to confirm:</p>
+<pre tabindex="0"><code># rcctl get transmission_daemon
+transmission_daemon_class=daemon
+transmission_daemon_flags=
+transmission_daemon_logger=
+transmission_daemon_rtable=1
+transmission_daemon_timeout=30
+transmission_daemon_user=_transmission
+</code></pre><p>After you start the transmission daemon, you can check what rdomain processes are running in with <code>ps aux -o rtable</code>:</p>
+<pre tabindex="0"><code>$ ps aux -o rtable
+-- snip
+USER       PID %CPU %MEM   VSZ   RSS TT  STAT   STARTED       TIME COMMAND          RTABLE
+_transmi 10922  0.0  0.1  5204  5752 ??  S      Sun02PM    0:24.80 /usr/local/bin/t      1
+
+</code></pre><p>You can also use the <code>-T1</code> flag with netstat to see transmission listening on port 51413 and port 9091 in rtable1:</p>
+<pre tabindex="0"><code>$ netstat -T1 -an | grep LISTEN
+tcp          0      0  *.51413                *.*                    LISTEN
+tcp          0      0  *.9091                 *.*                    LISTEN
+tcp6         0      0  *.51413                *.*                    LISTEN
+
+</code></pre><h2 id="using-pair-interfaces-to-route-between-rdomains">Using pair interfaces to route between rdomains</h2>
+<p>The diagram below demonstrates the current configuration - we have two separate rdomains. On the left we have rdomain0, our default rdomain, with the physical re0 interface that connects into our local network. On the right we have rdomain1, with the default route using the virtual tun0 interface that connects to our VPN.</p>
+<pre tabindex="0"><code>
+         ▲                   ▲
+         │ LAN               │ VPN
+         │                   │
+  ┌──────┴──────┐     ┌──────┴───────┐
+  │     re0     │     │     tun0     │
+  │             │     │              │
+  │             │     │              │
+  └─────────────┘     └──────────────┘
+      RDOMAIN0            RDOMAIN1
+</code></pre><p>At the moment, rdomain0 is completely separate from rdomain1 and cannot connect. However, I&rsquo;d like to be able to access the transmission web interface from other machines in my local network. An interface can only be in a single rdomain, so we need a way to connect these two rdomains so we can access the web interface of transmission in rdomain1.</p>
+<p>OpenBSD&rsquo;s pair(4) interface can be used to create a virtual Ethernet interface pair. An administrator can create a pair interface and configure each interface for a separate rdomain and connect them together.</p>
+<p>We can use pair(4) to create a virtual interface for each rdomain and patch them together, like so:</p>
+<pre tabindex="0"><code># ifconfig pair0 192.168.2.1/24 rdomain 0
+# ifconfig pair1 192.168.2.8/24 rdomain 1
+# ifconfig pair0 patch pair2
+</code></pre><p>The diagram below demonstrates the new configuration.</p>
+<pre tabindex="0"><code>
+         ▲                   ▲
+         │ LAN               │ VPN
+         │                   │
+  ┌──────┴──────┐     ┌──────┴───────┐
+  │     re0     │     │     tun0     │
+  │        pair0│ ────┤pair1         │
+  │             │     │              │
+  └─────────────┘     └──────────────┘
+      RDOMAIN0            RDOMAIN1
+
+</code></pre><p>We have now created a route to each rdomain, allowing us to access Transmission in rdomain1 from rdomain0.</p>
+<p>We can verify this route by looking at our routing table for rtable1:</p>
+<pre tabindex="0"><code>$ route -T1 show
+Routing tables
+
+Internet:
+Destination        Gateway            Flags   Refs      Use   Mtu  Prio Iface
+0/1                10.18.0.1          UGS        1    18421     -     8 tun0
+128/1              10.18.0.1          UGS        0    11485     -     8 tun0
+10.18/16           10.18.0.1          UGS        0        0     -     8 tun0
+10.18.0.1          10.18.0.31         UHh        3        3     -     8 tun0
+10.18.0.31         10.18.0.31         UHl        0    26618     -     1 tun0
+192.168.2/24       192.168.2.8        UCn        1        0     -     4 pair1
+192.168.2.1        fe:e1:ba:d0:ff:cf  UHLc       0    16523     -     3 pair1
+192.168.2.8        fe:e1:ba:d1:47:b7  UHLl       0    54540     -     1 pair1
+192.168.2.255      192.168.2.8        UHb        0        0     -     1 pair1
+</code></pre><p>As we configured pair1 to 192.168.2.8, we should be able to connect to transmission on that address from our default rdomain:</p>
+<pre tabindex="0"><code>$ nc -v 192.168.2.8 9091
+Connection to 192.168.2.8 9091 port [tcp/*] succeeded!
+</code></pre><h2 id="l7-proxying-with-relayd">L7 proxying with relayd</h2>
+<p>We now have a pair interface that will allow us to access the transmission daemon from rdomain0. However, I&rsquo;d like to be able to access the transmission web server from other machiens on my network, not just the server it&rsquo;s hosted on. To do this I can set up relayd to proxy traffic from rdomain0 to the tranmission daemon listening in rdomain1.</p>
+<p>This is very simple to do with relayd(8) with the configuration below:</p>
+<pre tabindex="0"><code># $OpenBSD: relayd.conf,v 1.5 2018/05/06 20:56:55 benno Exp $
+#
+table &lt;transmissionhost&gt; { 192.168.2.8 }
+
+relay www {
+        listen on 0.0.0.0 port 80
+
+        forward to &lt;transmissionhost&gt; port 9091 check tcp
+}
+</code></pre><p>The above will configure relayd to listen on port 80 and <em>relay</em> (L7 proxy) to our transmission daemon listening on the pair interface we set up in our previous step (192.168.2.8). Relayd can be used as a load balanced proxy, which is what the <code>check tcp</code> directive is for. Our use case is simplified with a single host but you could very easily add failover hosts here. The <code>check tcp</code> uses a simple tcp connect to chekc the health of the transmission daemon.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>There&rsquo;s still some more work required to make this more robust - at the moment if my server reboots I&rsquo;ll have to manually configure the OpenVPN tun0 interface into rdomain1. Transmission will always be isolated in rdomain1 so the traffic can&rsquo;t leak, but it won&rsquo;t have any routing information until I manually re-add it. I don&rsquo;t have a good sense on how to do this cleanly yet. OpenVPN&rsquo;s initial handshake needs a route out to the internet so it can establish the tunnel, so I can&rsquo;t just configure OpenVPN to launch in rdomain1 without providing it a route to the internet. I&rsquo;d need to be able to provide it that route temporarily on launch and then remove it. It&rsquo;s working well for now, so that&rsquo;s a challenge for another day.</p>
+
+</content>
+<p>
+  
+  <a href="https://example.com/blog/openbsd/">#openbsd</a>
+  
+  <a href="https://example.com/blog/rdomain/">#rdomain</a>
+  
+</p>
+
+  </main>
+  <footer>
+</footer>
+
+    
+</body>
+
+</html>
