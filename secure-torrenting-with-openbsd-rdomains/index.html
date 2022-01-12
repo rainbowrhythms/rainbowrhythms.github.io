@@ -32,7 +32,7 @@
 <meta itemprop="name" content="Secure torrenting with OpenBSD rdomains">
 <meta itemprop="description" content="Configuring rdomains on OpenBSD"><meta itemprop="datePublished" content="2021-10-01T13:45:50-07:00" />
 <meta itemprop="dateModified" content="2021-10-01T13:45:50-07:00" />
-<meta itemprop="wordCount" content="1529"><meta itemprop="image" content="https://insec.sh/images/share.png"/>
+<meta itemprop="wordCount" content="1710"><meta itemprop="image" content="https://insec.sh/images/share.png"/>
 <meta itemprop="keywords" content="openbsd,rdomain," />
 <meta name="referrer" content="no-referrer-when-downgrade" />
 
@@ -271,7 +271,30 @@ Destination        Gateway            Flags   Refs      Use   Mtu  Prio Iface
 </code></pre><p>And we can verify that rtable1 use the routes through the VPN interface by default and that it can succesfully access the internet:</p>
 <pre tabindex="0"><code>$ route -T1 exec curl icanhazip.com
 185.159.158.101
-</code></pre><h2 id="configuring-transmission">Configuring Transmission</h2>
+</code></pre><h3 id="configuring-tun0-rdomain-automatically">Configuring tun0 rdomain automatically</h3>
+<p>In the above section we manually moved the tun0 interface into rdomain1 after it had established a connection. Unfortunately we can&rsquo;t just force OpenVPN to run in rdomain1 on initial connect. OpenVPN needs to be able to route to the internet to establish the tunnel and rdomain1 has no route to the internet.</p>
+<p>So we need OpenVPN to start in rdomain0, determine the VPN gateway address through the default route, then move tun0 into rdomain1 and add the VPN gateway route.</p>
+<p>Fortunately OpenVPN can allow us to execute custom scripts during specific events. We can use the <code>down</code> directive to execute a specified script after the tun0 interface closes, and the <code>route-noexec</code> and <code>route-up</code> directive to execute our own routing script instead of OpenVPN adding our routes for us.</p>
+<p>We can therefore add the following to our <code>proton.ovpn</code> config:</p>
+<pre tabindex="0"><code>down /etc/openvpn/down-rdomain.sh
+route-noexec
+route-up /etc/openvpn/add-route.sh
+</code></pre><p>The <code>down-rdomain.sh</code> script simply contains the following:</p>
+<pre tabindex="0"><code>#!/bin/sh
+
+ifconfig tun0 rdomain 0
+</code></pre><p>We move tun0 back into rdomain 0 so that it can route back to the internet when the interface goes down.</p>
+<p>The <code>route-noexec</code> directive stops OpenVPN from adding routes automatically, but will expose the routes as environment variables that can be passed into the <code>route-up</code> script.</p>
+<p>Our <code>add-route.sh</code> script is as follows:</p>
+<pre tabindex="0"><code>#!/bin/sh
+
+ifconfig $dev rdomain 1
+ifconfig $dev $ifconfig_local $route_vpn_gateway mtu 1500 netmask 255.255.0.0 up
+route -T1 add -net $route_vpn_gateway -netmask 255.255.0.0 $route_vpn_gateway
+route -T1 add -net 0.0.0.0 -netmask 128.0.0.0 $route_vpn_gateway
+route -T1 add -net 128.0.0.0 -netmask 128.0.0.0 $route_vpn_gateway
+</code></pre><p>This script essentially performs what the automatic route creation would have done, except we begin with the <code>ifconfig $dev rdomain1</code> line to first move our tun interface into rdomain1.</p>
+<h2 id="configuring-transmission">Configuring Transmission</h2>
 <p>Now that we&rsquo;ve confirmed that the VPN tun0 interface is the default route for rdomain 1, we can place the transmission daemon within this rdomain.</p>
 <p>Doing so is simple on OpenBSD, you can use <code>rcctl</code> to set the transmission_daemon default rtable, like so:</p>
 <pre tabindex="0"><code># rcctl set transmission_daemon rtable 1
@@ -356,9 +379,9 @@ relay www {
 
         forward to &lt;transmissionhost&gt; port 9091 check tcp
 }
-</code></pre><p>The above will configure relayd to listen on port 80 and <em>relay</em> (L7 proxy) to our transmission daemon listening on the pair interface we set up in our previous step (192.168.2.8). Relayd can be used as a load balanced proxy, which is what the <code>check tcp</code> directive is for. Our use case is simplified with a single host but you could very easily add failover hosts here. The <code>check tcp</code> uses a simple tcp connect to chekc the health of the transmission daemon.</p>
+</code></pre><p>The above will configure relayd to listen on port 80 and <em>relay</em> (L7 proxy) to our transmission daemon listening on the pair interface we set up in our previous step (192.168.2.8). Relayd can be used as a load balanced proxy, which is what the <code>check tcp</code> directive is for. Our use case is simplified with a single host but you could very easily add failover hosts here. The <code>check tcp</code> uses a simple tcp connect to check the health of the transmission daemon.</p>
 <h2 id="conclusion">Conclusion</h2>
-<p>There&rsquo;s still some more work required to make this more robust - at the moment if my server reboots I&rsquo;ll have to manually configure the OpenVPN tun0 interface into rdomain1. Transmission will always be isolated in rdomain1 so the traffic can&rsquo;t leak, but it won&rsquo;t have any routing information until I manually re-add it. I don&rsquo;t have a good sense on how to do this cleanly yet. OpenVPN&rsquo;s initial handshake needs a route out to the internet so it can establish the tunnel, so I can&rsquo;t just configure OpenVPN to launch in rdomain1 without providing it a route to the internet. I&rsquo;d need to be able to provide it that route temporarily on launch and then remove it. It&rsquo;s working well for now, so that&rsquo;s a challenge for another day.</p>
+<p>That&rsquo;s it! With transmission isolated in a separate rdomain that must use the tun0 interface, we can&rsquo;t accidentally leak torrent traffic in the event of any network issues with the VPN server.</p>
 
 </content>
 <p>
